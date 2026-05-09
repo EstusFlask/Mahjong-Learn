@@ -9,6 +9,7 @@ pub enum Platform {
     #[default]
     Majsoul,
     Tenhou,
+    Local,
 }
 
 impl Platform {
@@ -18,6 +19,7 @@ impl Platform {
         match self {
             Platform::Majsoul => "majsoul",
             Platform::Tenhou => "tenhou",
+            Platform::Local => "local",
         }
     }
 }
@@ -30,6 +32,7 @@ impl From<Platform> for schema::Platform {
         match p {
             Platform::Majsoul => schema::Platform::Majsoul,
             Platform::Tenhou => schema::Platform::Tenhou,
+            Platform::Local => schema::Platform::Local,
         }
     }
 }
@@ -53,6 +56,10 @@ mod tests {
         assert_eq!(
             schema::Platform::from(Platform::Tenhou),
             schema::Platform::Tenhou
+        );
+        assert_eq!(
+            schema::Platform::from(Platform::Local),
+            schema::Platform::Local
         );
     }
 }

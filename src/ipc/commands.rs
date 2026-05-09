@@ -18,6 +18,7 @@ use crate::ipc::capture_supervisor::{
     restart_capture as restart_capture_inner, spawn_capture_supervisor,
 };
 use crate::ipc::state::AppState;
+use crate::local::{LocalBuses, LocalGameStartRequest, LocalGameView, LocalRuntime};
 use crate::schema::{
     BotInfo, BotSettings, GameRecord, HistoryEvent, HistoryEventLog, HistoryFilter, HoraScoreInfo,
     InspectorEntry, LogEntry, LogSessionInfo, Notification, ReadInspectorRequest,
@@ -26,7 +27,7 @@ use crate::schema::{
 use crate::util::resolve_dir;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use tauri::State;
+use tauri::{Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 /// Returns `true` exactly once per process the first time `bot_enabled`
 /// is observed as `true` here. Side-effect on success: flips `flag`
@@ -1077,6 +1078,92 @@ pub async fn get_mahgen_view(state: State<'_, AppState>) -> CmdResult<Option<Mah
         .map(|s| MahgenView::from_snapshot(&s)))
 }
 
+#[tauri::command]
+pub async fn open_local_game_window(app: tauri::AppHandle) -> CmdResult<()> {
+    if let Some(window) = app.get_webview_window("local-game") {
+        let _ = window.set_focus();
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(
+        &app,
+        "local-game",
+        WebviewUrl::App("index.html#/local-game".into()),
+    )
+    .title("Akagi Local Mahjong")
+    .inner_size(1280.0, 860.0)
+    .min_inner_size(1040.0, 680.0)
+    .build()
+    .map_err(|e| format!("open local game window: {e}"))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn local_game_start(
+    req: LocalGameStartRequest,
+    state: State<'_, AppState>,
+) -> CmdResult<LocalGameView> {
+    let cfg = state.config.read().await.clone();
+    if cfg.platform.kind != crate::config::Platform::Local {
+        return Err("Select the Local platform in Setup or Settings before starting a local game."
+            .to_string());
+    }
+    *state
+        .history_platform
+        .write()
+        .expect("history platform lock poisoned") = crate::schema::Platform::Local;
+    let runtime = LocalRuntime {
+        runtime: state.runtime.as_ref(),
+        bot_dir: &cfg.bot.dir,
+        syncs_in_flight: state.syncs_in_flight.clone(),
+    };
+    let buses = LocalBuses {
+        mjai: &state.mjai_bus,
+        bot_response: &state.bot_response_bus,
+        notify: &state.notify_bus,
+        inspector: state.log_session.inspector(),
+    };
+    state
+        .local_game
+        .lock()
+        .await
+        .start(req, &cfg, runtime, buses)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+
+#[tauri::command]
+pub async fn local_game_submit_action(
+    action_id: String,
+    state: State<'_, AppState>,
+) -> CmdResult<LocalGameView> {
+    let buses = LocalBuses {
+        mjai: &state.mjai_bus,
+        bot_response: &state.bot_response_bus,
+        notify: &state.notify_bus,
+        inspector: state.log_session.inspector(),
+    };
+    state
+        .local_game
+        .lock()
+        .await
+        .submit_action(action_id, buses)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+
+#[tauri::command]
+pub async fn get_local_game_state(
+    state: State<'_, AppState>,
+) -> CmdResult<Option<LocalGameView>> {
+    Ok(state.local_game.lock().await.view())
+}
+
+#[tauri::command]
+pub async fn local_game_stop(state: State<'_, AppState>) -> CmdResult<()> {
+    state.local_game.lock().await.stop();
+    Ok(())
+}
+
 /// Remove a bot's directory under `bot.dir/<name>/`. Refuses to delete
 /// the currently-active bot — user must `set_active_bot` to a different
 /// one first. Refuses target paths that escape `bot.dir` (defense in
@@ -1238,6 +1325,11 @@ macro_rules! ipc_handlers {
             $crate::ipc::commands::get_game_snapshot,
             $crate::ipc::commands::get_mahgen_view,
             $crate::ipc::commands::compute_bot_hora_score,
+            $crate::ipc::commands::open_local_game_window,
+            $crate::ipc::commands::local_game_start,
+            $crate::ipc::commands::local_game_submit_action,
+            $crate::ipc::commands::get_local_game_state,
+            $crate::ipc::commands::local_game_stop,
             $crate::ipc::commands::list_game_history,
             $crate::ipc::commands::get_game_history_record,
             $crate::ipc::commands::get_game_history_events,

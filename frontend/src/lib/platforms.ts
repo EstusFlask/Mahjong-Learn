@@ -33,6 +33,12 @@ export const PLATFORMS: PlatformInfo[] = [
     descriptionKey: 'platform.tenhou_desc',
     defaultStartUrl: 'https://tenhou.net/4/',
   },
+  {
+    kind: 'Local',
+    labelKey: 'platform.local',
+    descriptionKey: 'platform.local_desc',
+    defaultStartUrl: '',
+  },
 ]
 
 const BY_KIND: Record<PlatformKind, PlatformInfo> = Object.fromEntries(

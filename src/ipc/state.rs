@@ -26,6 +26,7 @@ use crate::game_state::GameTracker;
 use crate::history::HistoryStore;
 use crate::history::recorder::SharedPlatform;
 use crate::logger::Session;
+use crate::local::LocalGameManager;
 use crate::schema::{BotStatus, CaptureStatus};
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -91,6 +92,7 @@ pub struct AppState {
     /// user switches bridges so subsequent records pick up the new tag
     /// without a relaunch.
     pub history_platform: SharedPlatform,
+    pub local_game: Arc<Mutex<LocalGameManager>>,
 
     /// Bundled-or-system Python + uv. `None` on dev boxes lacking both —
     /// install/sync commands surface a friendly error instead of panicking;
@@ -154,6 +156,7 @@ impl AppState {
             analysis_cache,
             history_store,
             history_platform,
+            local_game: Arc::new(Mutex::new(LocalGameManager::default())),
             runtime,
             syncs_in_flight: Arc::new(Mutex::new(HashSet::new())),
             bot_manager_started: Arc::new(AtomicBool::new(false)),

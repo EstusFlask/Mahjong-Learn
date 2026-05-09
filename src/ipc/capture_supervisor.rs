@@ -15,7 +15,7 @@ use crate::capture::{
     chromium::ChromiumBackend, hudsucker_backend::HudsuckerBackend, CaptureBackend, CaptureCtx,
     CaptureKind as RtCaptureKind, ShutdownToken,
 };
-use crate::config::CaptureMode;
+use crate::config::{CaptureMode, Platform};
 use crate::ipc::state::AppState;
 use crate::schema::{CaptureKind, CaptureStatus, Notification};
 use anyhow::Result;
@@ -94,6 +94,20 @@ pub async fn spawn_capture_supervisor(state: AppState) -> Result<()> {
             cfg.platform.kind,
         )
     };
+
+    if platform == Platform::Local {
+        {
+            let mut ctl = state.capture_control.lock().await;
+            ctl.status = CaptureStatus::Stopped;
+            ctl.stop = None;
+        }
+        let _ = state.capture_status_bus.send(CaptureStatus::Stopped);
+        let _ = state.notify_bus.send(
+            Notification::info("Local game selected")
+                .body("Capture is not needed for the built-in local table."),
+        );
+        return Ok(());
+    }
 
     // Build a fresh shutdown token for this run. Stored in
     // `capture_control.stop` as a oneshot-via-Notify shim: command-side

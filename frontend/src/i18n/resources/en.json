@@ -378,6 +378,7 @@
       "mode_label": "Mode:",
       "mode_chromium": "Chromium browser",
       "mode_mitm": "MITM proxy",
+      "mode_local": "Built-in local table",
       "listen_label": "Listen:",
       "ca_dir_label": "CA dir:",
       "exec_label": "Executable:",
@@ -432,6 +433,41 @@
     "last_analysis": "Latest analysis",
     "open_dashboard": "Open Game Analysis"
   },
+  "local_game": {
+    "title": "Local Mahjong",
+    "ready": "Ready",
+    "no_game": "Start a local game",
+    "start": "Start",
+    "new_game": "New Game",
+    "restart": "Restart",
+    "open_window": "Open Local Mahjong",
+    "round_line": "{{wind}}{{kyoku}} honba {{honba}} / sticks {{kyotaku}}",
+    "dora": "Dora",
+    "thinking": "Opponents thinking",
+    "waiting": "Waiting",
+    "ended": "Game ended",
+    "modes": {
+      "four_east": "4P East",
+      "four_hanchan": "4P Hanchan",
+      "three_east": "3P East",
+      "three_hanchan": "3P Hanchan"
+    },
+    "actions": {
+      "title": "Actions",
+      "discard": "Discard",
+      "chi": "Chi",
+      "pon": "Pon",
+      "daiminkan": "Kan",
+      "ron": "Ron",
+      "riichi": "Riichi",
+      "tsumo": "Tsumo",
+      "pass": "Pass",
+      "ankan": "Closed kan",
+      "kakan": "Added kan",
+      "kyushu_kyuhai": "Abort",
+      "kita": "Kita"
+    }
+  },
   "game": {
     "bot_disabled_title": "Bot is disabled",
     "bot_disabled_desc": "Enable bots in Settings to receive recommendations."
@@ -484,6 +520,8 @@
     "majsoul_desc": "game.maj-soul.com — yonma + sanma",
     "tenhou": "Tenhou",
     "tenhou_desc": "tenhou.net — yonma + sanma",
+    "local": "Local",
+    "local_desc": "Built-in riichi table with MJAI bot opponents.",
     "riichi_city": "Riichi City",
     "mjai": "mjai"
   }

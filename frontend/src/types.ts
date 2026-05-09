@@ -95,7 +95,7 @@ export type DetectedBrowser = {
 /// share names but the schema enum carries extra archive-only variants).
 /// Mirrors `src/config/platform.rs::Platform` (`#[derive(Serialize)]` →
 /// PascalCase JSON: `"Majsoul"`, `"Tenhou"`).
-export type PlatformKind = 'Majsoul' | 'Tenhou'
+export type PlatformKind = 'Majsoul' | 'Tenhou' | 'Local'
 
 export type MajsoulAutoplayConfig = {
   pre_click_delay_min_ms: number
@@ -240,6 +240,8 @@ export type PlayerSnapshot = {
   riichi_declaration_index: number | null
   /** 3p only: north tiles set aside via kita / nukidora. Empty in 4p. */
   kita_tiles: string[]
+  /** Tile currently drawn by the active player, when visible. */
+  drawn_tile?: string | null
 }
 
 export type GameStateSnapshot = {
@@ -293,9 +295,48 @@ export type HoraScoreInfo = {
 export type Platform =
   | 'majsoul'
   | 'tenhou'
+  | 'local'
   | 'riichi_city'
   | 'mjai'
   | 'unknown'
+
+export type LocalGameMode =
+  | 'four_east'
+  | 'four_hanchan'
+  | 'three_east'
+  | 'three_hanchan'
+
+export type LocalActionKind =
+  | 'discard'
+  | 'chi'
+  | 'pon'
+  | 'daiminkan'
+  | 'ron'
+  | 'riichi'
+  | 'tsumo'
+  | 'pass'
+  | 'ankan'
+  | 'kakan'
+  | 'kyushu_kyuhai'
+  | 'kita'
+
+export type LocalActionView = {
+  id: string
+  kind: LocalActionKind
+  actor: number
+  tile?: string
+  consumed: string[]
+}
+
+export type LocalGameView = {
+  mode: LocalGameMode
+  bot_4p: string
+  bot_3p: string
+  names: string[]
+  snapshot: GameStateSnapshot
+  legal_actions: LocalActionView[]
+  message?: string
+}
 
 export type KyokuMode = 'east_only' | 'east_south' | 'other'
 

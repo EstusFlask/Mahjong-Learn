@@ -23,6 +23,7 @@ use crate::schema::MjaiEvent;
 pub enum Platform {
     Majsoul,
     Tenhou,
+    Local,
     RiichiCity,
     Mjai,
     Unknown,

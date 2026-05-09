@@ -11,6 +11,7 @@ pub mod history;
 pub mod inspector;
 pub mod ipc;
 pub mod logger;
+pub mod local;
 pub mod platform;
 pub mod proxy;
 pub mod schema;

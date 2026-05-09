@@ -8,6 +8,7 @@ import { useCaptureStore } from '@/stores/captureStore'
 import { useConfigStore } from '@/stores/configStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { fmtTime } from '@/lib/format'
+import { invoke } from '@/lib/tauri'
 
 const DOT: Record<string, string> = {
   ready:    'bg-emerald-500',
@@ -25,6 +26,9 @@ export function Overview() {
   const capture = useCaptureStore((s) => s.status)
   const logDir = useConfigStore((s) => s.logDir)
   const lastAnalysis = useAnalysisStore((s) => s.updatedAt)
+  const openLocalGame = () => {
+    void invoke('open_local_game_window').catch(() => {})
+  }
 
   const captureTitle = 'kind' in capture && capture.kind === 'chromium' ? t('overview.capture_chromium') : t('overview.capture_mitm')
   const captureDetail = 'descriptor' in capture && capture.descriptor ? capture.descriptor : '—'
@@ -85,6 +89,10 @@ export function Overview() {
             <SettingsIcon className="h-4 w-4" />
             {t('settings.title')}
           </Link>
+        </Button>
+        <Button variant="outline" onClick={openLocalGame} className="gap-1.5">
+          <Gamepad2 className="h-4 w-4" />
+          {t('local_game.open_window')}
         </Button>
       </div>
     </div>

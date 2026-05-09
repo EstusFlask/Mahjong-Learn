@@ -373,6 +373,9 @@ function PlatformCard({
     })
   }
   const info = platformInfo(current)
+  const openLocalGame = () => {
+    void invoke('open_local_game_window').catch(() => {})
+  }
   return (
     <Card>
       <CardHeader>
@@ -397,6 +400,11 @@ function PlatformCard({
           </Select>
         </Field>
         <p className="text-xs text-muted-foreground">{t(info.descriptionKey)}</p>
+        {current === 'Local' && (
+          <Button variant="outline" onClick={openLocalGame} className="w-fit">
+            {t('local_game.open_window')}
+          </Button>
+        )}
       </CardContent>
     </Card>
   )

@@ -12,6 +12,7 @@ import { History } from '@/routes/History'
 import { Logs } from '@/routes/Logs'
 import { Settings } from '@/routes/Settings'
 import { Setup } from '@/routes/Setup'
+import { LocalGame } from '@/routes/LocalGame'
 import { HAS_TAURI, invoke } from '@/lib/tauri'
 import type { AppConfig } from '@/types'
 
@@ -33,6 +34,7 @@ const requireFirstRunCompleted = async () => {
 
 const router = createHashRouter([
   { path: '/setup', element: <Setup /> },
+  { path: '/local-game', element: <LocalGame /> },
   {
     element: <App />,
     loader: requireFirstRunCompleted,

@@ -26,6 +26,7 @@ import type { AppConfig, BotInfo, BotSettings, DetectedBrowser, PlatformKind } f
 type Step = 'welcome' | 'platform' | 'mode' | 'config' | 'bots' | 'configure' | 'finish'
 
 const STEPS: Step[] = ['welcome', 'platform', 'mode', 'config', 'bots', 'configure', 'finish']
+const LOCAL_STEPS: Step[] = ['welcome', 'platform', 'bots', 'configure', 'finish']
 
 // Author-provided MJAI bots installed by the first-run wizard. Same
 // install path as the manual Bots → Install From GitHub flow, just
@@ -74,9 +75,10 @@ export function Setup() {
     return <div className="p-6 text-muted-foreground">{t('setup.loading')}</div>
   }
 
-  const idx = STEPS.indexOf(step)
+  const activeSteps = draft.platform.kind === 'Local' ? LOCAL_STEPS : STEPS
+  const idx = Math.max(0, activeSteps.indexOf(step))
   const canBack = idx > 0
-  const canNext = idx < STEPS.length - 1
+  const canNext = idx < activeSteps.length - 1
 
   const saveBotSettings = async () => {
     for (const [name, settings] of Object.entries(botSettingsDraft)) {
@@ -103,9 +105,9 @@ export function Setup() {
       }
       setBusy(false)
     }
-    setStep(STEPS[idx + 1])
+    setStep(activeSteps[idx + 1])
   }
-  const back = () => setStep(STEPS[idx - 1])
+  const back = () => setStep(activeSteps[idx - 1])
 
   const finish = async () => {
     setBusy(true)
@@ -141,6 +143,9 @@ export function Setup() {
       }
       await invoke('update_config', { newConfig: final })
       setStored(final)
+      if (final.platform.kind === 'Local') {
+        await invoke('open_local_game_window').catch(() => {})
+      }
       navigate('/', { replace: true })
     } catch (e) {
       setErr(String(e))
@@ -159,10 +164,10 @@ export function Setup() {
           <div className="flex items-center justify-between">
             <CardTitle>{t('setup.title')}</CardTitle>
             <span className="text-xs text-muted-foreground">
-              {t('setup.step_progress', { current: idx + 1, total: STEPS.length })}
+              {t('setup.step_progress', { current: idx + 1, total: activeSteps.length })}
             </span>
           </div>
-          <Stepper current={idx} />
+          <Stepper current={idx} steps={activeSteps} />
         </CardHeader>
         <CardContent className="grid gap-6">
           {step === 'welcome' && <WelcomeStep />}
@@ -209,10 +214,10 @@ export function Setup() {
   )
 }
 
-function Stepper({ current }: { current: number }) {
+function Stepper({ current, steps }: { current: number; steps: Step[] }) {
   return (
     <div className="flex gap-1.5 mt-3">
-      {STEPS.map((_, i) => (
+      {steps.map((_, i) => (
         <div
           key={i}
           className={`h-1 flex-1 rounded ${i <= current ? 'bg-primary' : 'bg-muted'}`}
@@ -872,6 +877,7 @@ function BotSettingsForm({
 function FinishStep({ draft }: { draft: AppConfig }) {
   const { t } = useTranslation()
   const m = draft.capture.mode
+  const isLocal = draft.platform.kind === 'Local'
   const [installed, setInstalled] = useState<BotInfo[] | null>(null)
   useEffect(() => {
     invoke<BotInfo[]>('list_bots').then(setInstalled).catch(() => setInstalled([]))
@@ -890,14 +896,18 @@ function FinishStep({ draft }: { draft: AppConfig }) {
       <h2 className="text-lg font-semibold">{t('setup.finish.title')}</h2>
       <div className="rounded-md border border-border/50 p-3 text-sm">
         <div><b>{t('setup.finish.platform_label')}</b> {t(platformInfo(draft.platform.kind).labelKey)}</div>
-        <div><b>{t('setup.finish.mode_label')}</b> {m === 'chromium' ? t('setup.finish.mode_chromium') : t('setup.finish.mode_mitm')}</div>
-        {m === 'mitm' && (
+        {isLocal ? (
+          <div><b>{t('setup.finish.mode_label')}</b> {t('setup.finish.mode_local')}</div>
+        ) : (
+          <div><b>{t('setup.finish.mode_label')}</b> {m === 'chromium' ? t('setup.finish.mode_chromium') : t('setup.finish.mode_mitm')}</div>
+        )}
+        {!isLocal && m === 'mitm' && (
           <>
             <div><b>{t('setup.finish.listen_label')}</b> {draft.proxy.addr}</div>
             <div><b>{t('setup.finish.ca_dir_label')}</b> {draft.proxy.ca_dir}</div>
           </>
         )}
-        {m === 'chromium' && (
+        {!isLocal && m === 'chromium' && (
           <>
             <div>
               <b>{t('setup.finish.exec_label')}</b>{' '}
@@ -914,7 +924,8 @@ function FinishStep({ draft }: { draft: AppConfig }) {
         <div><b>{t('setup.finish.bots_label')}</b> {installed === null ? t('setup.finish.bots_checking') : botSummary}</div>
       </div>
       <p className="text-sm text-muted-foreground">
-        {t('setup.finish.click_finish_pre')}<b>{t('setup.finish.click_finish_btn')}</b>{t('setup.finish.click_finish_post')}
+        {t('setup.finish.click_finish_pre')}<b>{t('setup.finish.click_finish_btn')}</b>
+        {isLocal ? ' to save these settings and open the local table.' : t('setup.finish.click_finish_post')}
       </p>
     </div>
   )

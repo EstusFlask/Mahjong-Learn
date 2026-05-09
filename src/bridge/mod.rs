@@ -67,6 +67,18 @@ pub trait Bridge: Send {
     fn build(&mut self, command: &MjaiEvent) -> Option<Vec<u8>>;
 }
 
+struct NoopBridge;
+
+impl Bridge for NoopBridge {
+    fn parse(&mut self, _direction: Direction, _content: &[u8]) -> ParseResult {
+        ParseResult::empty()
+    }
+
+    fn build(&mut self, _command: &MjaiEvent) -> Option<Vec<u8>> {
+        None
+    }
+}
+
 /// Construct a bridge for the given platform.
 ///
 /// - `flow_log`: per-WS-flow text dump (one JSON line per parsed message).
@@ -80,5 +92,6 @@ pub fn for_platform(
     match platform {
         crate::config::Platform::Majsoul => Box::new(MajsoulBridge::new(flow_log, session)),
         crate::config::Platform::Tenhou => Box::new(TenhouBridge::new(flow_log, session)),
+        crate::config::Platform::Local => Box::new(NoopBridge),
     }
 }

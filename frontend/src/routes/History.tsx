@@ -175,6 +175,7 @@ function FilterCard({
                 <SelectItem value={ANY}>{t('history.filter.any')}</SelectItem>
                 <SelectItem value="majsoul">{t('platform.majsoul')}</SelectItem>
                 <SelectItem value="tenhou">{t('platform.tenhou')}</SelectItem>
+                <SelectItem value="local">{t('platform.local')}</SelectItem>
                 <SelectItem value="riichi_city">{t('platform.riichi_city')}</SelectItem>
                 <SelectItem value="mjai">{t('platform.mjai')}</SelectItem>
               </SelectContent>
